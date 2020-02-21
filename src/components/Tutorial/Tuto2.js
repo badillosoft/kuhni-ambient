@@ -26,21 +26,40 @@ export default props => {
       <pre>
         <code>
           {`
-              import React, { useState } from "react";
+import React, { useState } from "react";
 
-              export default props => {
-                const [value, setValue] = useState("valor inicial");
-                const [status, setStatus] = useState("estatus inicial");
-                
-                return <div>Vista</div>;
-              };
+export default props => {
+  const [value, setValue] = useState("valor inicial");
+  const [status, setStatus] = useState("estatus inicial");
+  
+  return (
+    <div className="d-flex flex-column p-5">
+      <input
+        className="form-control"
+        value={value}
+        onChange={event => {
+          const newValue = event.target.value;
+
+          setValue(newValue);
+
+          setStatus(
+            newValue
+              ? "La caja SI tiene texto :D"
+              : "La caja NO tiene texto :("
+          );
+        }}
+      />
+      <span>Estatus: {status}</span>
+    </div>
+  );
+};
             `}
         </code>
       </pre>
       <p>
         <em>Veamos el ejemplo funcionando.</em>
       </p>
-      <div className="d-flex flex-column">
+      <div className="d-flex flex-column p-5">
         <input
           className="form-control"
           value={value}
@@ -58,14 +77,22 @@ export default props => {
         />
         <span>Estatus: {status}</span>
       </div>
-      <p>
-        Ahora ya sabes crear un componente. Por favor intenta aprender sólo el{" "}
-        <strong>Modo Estándar</strong>
+      <p className="mt-2">
+        Ahora ya sabes usar los estados, recuerda usar un estado por cada valor
+        que pueda cambiar dentro de tu componente. En react no sirven las
+        variables tradicionales (<code>const</code> y <code>let</code>) para
+        retener datos. Usa los estados para saber el estado actual dentro de tu
+        componente, piensa que siempre retendrá el último valor ajustado por el
+        ajustador o el primero que se definió al crearlo.
       </p>
-      <a className="btn btn-primary btn-lg mr-2" href="#home" role="button">
+      <a
+        className="btn btn-primary btn-lg mr-2"
+        href="#tutorial-1"
+        role="button"
+      >
         Inicio
       </a>
-      <a className="btn btn-primary btn-lg" href="#tutorial-2" role="button">
+      <a className="btn btn-primary btn-lg" href="#tutorial-3" role="button">
         Siguiente
       </a>
     </div>

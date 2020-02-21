@@ -22,19 +22,19 @@ export default props => {
       <pre>
         <code>
           {`
-              import React from "react";
-              
-              export default props => {
-                // ... lógica
-                return <div>Vista</div>;
-              };
+import React from "react";
+
+export default props => {
+  // ... lógica
+  return <div>Vista</div>;
+};
             `}
         </code>
       </pre>
       <p>
         <em>
-          <strong>Modo canónico:</strong> Se exporta una contante que asigna una
-          función. Se usa cuándo se exportan varios componentes.{" "}
+          <strong>Modo canónico:</strong> Se exporta una constante a la que se
+          le asigna una función. Se usa cuándo se exportan varios componentes.{" "}
           <span className="text-danger">
             No es buena práctica definir más de un componente por archivo.
           </span>
@@ -43,12 +43,12 @@ export default props => {
       <pre>
         <code>
           {`
-              import React from "react";
-              
-              export const MiComponente = props => {
-                // ... lógica
-                return <div>Vista</div>;
-              };
+import React from "react";
+
+export const MiComponente = props => {
+  // ... lógica
+  return <div>Vista</div>;
+};
             `}
         </code>
       </pre>
@@ -65,12 +65,12 @@ export default props => {
       <pre>
         <code>
           {`
-              import React from "react";
-              
-              export function (props) {
-                // ... lógica
-                return <div>Vista</div>;
-              };
+import React from "react";
+
+export function (props) {
+  // ... lógica
+  return <div>Vista</div>;
+};
             `}
         </code>
       </pre>
@@ -87,11 +87,11 @@ export default props => {
       <pre>
         <code>
           {`
-              import React from "react";
-              
-              export class MiComponente extends React.Component {
-                // ... hell here
-              }
+import React from "react";
+
+export class MiComponente extends React.Component {
+  // ... hell here
+}
             `}
         </code>
       </pre>
