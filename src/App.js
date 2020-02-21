@@ -8,7 +8,7 @@ import routes from "./routes";
 
 export default function App() {
   return (
-    <div className="App">
+    <div className="container">
       <Ambient routes={routes} />
     </div>
   );

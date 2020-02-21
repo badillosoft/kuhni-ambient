@@ -2,7 +2,9 @@
 // Main Developer: Alan Badillo Salas
 // Contact: badillo.soft@hotmail.com (@badillosoft on SM)
 // Support: kuhnidev@gmail.com
-// Github: https://github.com/badillosoft/kuhni-ambient
+// Github (dev): https://github.com/badillosoft/kuhni-ambient
+// Github (prod): https://github.com/kuhnidev/kuhni-ambient
+// MIT LICENSE
 
 import React, { useState, useEffect } from "react";
 
