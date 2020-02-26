@@ -9,11 +9,23 @@ import Tuto5p2 from "./components/Tutorial/Tuto5p2";
 import UserForm from "./components/UserForm/UserForm";
 import UserInfo from "./components/UserInfo/UserInfo";
 import Tuto5p3 from "./components/Tutorial/Tuto5p3";
+import TodoList from "./components/TodoList/TodoList";
+import TodoInput from "./components/TodoList/TodoInput";
+import ComponentA from "./Test/UseContainer/ComponentA";
+import ComponentB from "./Test/UseContainer/ComponentB";
+import Monitor from "./Test/Monitor/Monitor";
+import ComponentC from "./Test/UseContainer/ComponentC";
+import ComponentD from "./Test/UseContainer/ComponentD";
 
 export default {
   "#": Home,
   "#home": Home,
   "#hello": Hello,
+  "#monitor": Monitor,
+  "#todo": [TodoInput, TodoList],
+  "#todo/input": TodoInput,
+  "#todo/list": TodoList,
+  "#test/use-container": [ComponentA, ComponentB, ComponentC, ComponentD],
   "#tutorial-1": Tuto1,
   "#tutorial-2": Tuto2,
   "#tutorial-3": Tuto3,

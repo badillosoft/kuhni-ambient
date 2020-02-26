@@ -34,7 +34,7 @@ export const useContextState = (
       // console.log(Object.keys(listeners[name]));
       context[name] = newValue;
       for (let setValue of Object.values(listeners[name])) {
-        setValue(newValue);
+        setValue(JSON.parse(JSON.stringify(newValue)));
       }
     }
   ];
@@ -50,22 +50,23 @@ export const useRouter = (
     context,
     listeners,
     key,
-    defaultUrl
+    window.location.hash || defaultUrl
   );
 
-  const [routeData, setRouteData] = useContextState(
-    context,
-    listeners,
-    `${key}:data`,
-    {}
-  );
+  // const [routeData, setRouteData] = useContextState(
+  //   context,
+  //   listeners,
+  //   `${key}:data`,
+  //   {}
+  // );
 
   useEffect(() => {
     const listener = () => {
       const hash = window.location.hash || "#";
-      const storeKey = `kuhni@ambient/route:data${hash}`;
-      const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
-      setRouteData(data);
+      // const storeKey = `kuhni@ambient/route:data${hash}`;
+      // const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
+      // console.log("hash", hash, data, route);
+      // setRouteData(data);
       setRoute(hash);
     };
 
@@ -78,9 +79,11 @@ export const useRouter = (
     return () => {
       window.removeEventListener("hashchange", listener);
     };
-  }, [route, setRoute, setRouteData]);
+  }, [route, setRoute]);
+  // }, [route, setRoute, setRouteData]);
 
-  return [route, routeData];
+  return route;
+  // return [route, routeData];
 };
 
 export const Ambient = props => {
@@ -95,11 +98,12 @@ export const Ambient = props => {
   const shareRouter = useRouter;
 
   const [routes] = useState(defaultRoutes || {});
+  const [container] = useState(defaultContainer || {});
   const [context] = useState(defaultContext || {});
   const [listeners] = useState(defaultListeners || {});
-  const [container] = useState(defaultContainer || {});
 
-  const [route, routeData] = useRouter(context, listeners);
+  const route = useRouter(context, listeners);
+  // const [route, routeData] = useRouter(context, listeners);
 
   const component = routes[route] || (() => <code>Not found {route}</code>);
 
@@ -110,22 +114,46 @@ export const Ambient = props => {
       {components.map((Block, index) => (
         <Block
           key={`block-${index}`}
-          context={context}
-          listeners={listeners}
-          container={container}
+          route={route}
+          routes={JSON.parse(JSON.stringify(Object.keys(routes)))}
+          container={JSON.parse(JSON.stringify(container))}
+          context={JSON.parse(JSON.stringify(context))}
+          listeners={JSON.parse(
+            JSON.stringify(
+              Object.entries(listeners)
+                .map(([key, listeners]) => [key, Object.keys(listeners)])
+                .reduce(
+                  (object, [key, listeners]) => ({
+                    ...object,
+                    [key]: listeners
+                  }),
+                  {}
+                )
+            )
+          )}
           useRouter={shareRouter}
           useContextState={shareContextState}
-          navigate={(route = "#", data = {}) => {
-            const storeKey = `kuhni@ambient/route:data${route}`;
-            localStorage.setItem(storeKey, JSON.stringify(data));
-            window.location = route;
+          navigate={(route = "#", force = false) => {
+            window.location = `${route}${
+              force ? `:${Number(new Date())}` : ""
+            }`;
           }}
-          navigateData={routeData}
+          // navigate={(route = "#", data = {}) => {
+          //   const storeKey = `kuhni@ambient/route:data${route}`;
+          //   localStorage.setItem(storeKey, JSON.stringify(data));
+          //   window.location = route;
+          // }}
+          // navigateData={routeData}
           useContainer={(namespace = "common", token = "public") => {
-            const context = (container[`${namespace}:${token}`] =
-              container[`${namespace}:${token}`] || {});
+            const secret = `${namespace}:${token}`;
+            const context = (container[secret] = container[secret] || {});
             return (name, defaultValue) =>
-              shareContextState(context, listeners, name, defaultValue);
+              shareContextState(
+                context,
+                listeners,
+                `${secret}@${name}`,
+                defaultValue
+              );
           }}
         />
       ))}
