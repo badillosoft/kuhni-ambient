@@ -12,8 +12,10 @@ export const useContextState = (
   context,
   listeners,
   name = "default",
-  defaultValue = null
+  defaultValue = null,
+  container = {}
 ) => {
+  container["@monitor:public"] = container["@monitor:public"] || {};
   context[name] = context[name] === undefined ? defaultValue : context[name];
   listeners[name] = listeners[name] || {};
   const [value, setValue] = useState(context[name]);
@@ -32,8 +34,32 @@ export const useContextState = (
     value,
     newValue => {
       // console.log(Object.keys(listeners[name]));
+
       context[name] = newValue;
-      for (let setValue of Object.values(listeners[name])) {
+
+      for (let setValue of Object.values(listeners[name] || [])) {
+        setValue(JSON.parse(JSON.stringify(newValue)));
+      }
+
+      container["@monitor:public"]["@monitor:public@name"] = name;
+      container["@monitor:public"]["@monitor:public@value"] = JSON.stringify(
+        newValue
+      );
+      container["@monitor:public"][
+        "@monitor:public@container"
+      ] = JSON.stringify(container);
+      container["@monitor:public"]["@monitor:public@context"] = JSON.stringify(
+        context
+      );
+
+      for (let setValue of Object.values(
+        listeners["@monitor:public@name"] || []
+      )) {
+        setValue(name);
+      }
+      for (let setValue of Object.values(
+        listeners["@monitor:public@value"] || []
+      )) {
         setValue(JSON.parse(JSON.stringify(newValue)));
       }
     }
@@ -107,6 +133,11 @@ export const Navigator = props => {
 export const Monitor = props => {
   const { block } = props;
 
+  const monitorContainer = block().useContainer("@monitor");
+
+  const [monitorName] = monitorContainer("name");
+  const [monitorValue] = monitorContainer("value");
+
   const [container, setContainer] = useState({});
   const [context, setContext] = useState({});
   const [listeners, setListeners] = useState({});
@@ -118,35 +149,43 @@ export const Monitor = props => {
       return;
     }
 
-    const id = setInterval(() => {
-      const {
-        container: $container,
-        context: $context,
-        listeners: $listeners,
-        route: $route,
-        routes: $routes
-      } = block();
+    console.log("monitor", monitorName, monitorValue);
 
-      if (JSON.stringify($container) !== JSON.stringify(container)) {
-        setContainer($container);
-      }
-      if (JSON.stringify($context) !== JSON.stringify(context)) {
-        setContext($context);
-      }
-      if (JSON.stringify($listeners) !== JSON.stringify(listeners)) {
-        setListeners($listeners);
-      }
-      if (JSON.stringify($route) !== JSON.stringify(route)) {
-        setRoute($route);
-      }
-      if (JSON.stringify($routes) !== JSON.stringify(routes)) {
-        setRoutes($routes);
-      }
-    }, 100);
-    return () => {
-      clearInterval(id);
-    };
-  }, [block, container, context, listeners, route, routes]);
+    const {
+      container: $container,
+      context: $context,
+      listeners: $listeners,
+      route: $route,
+      routes: $routes
+    } = block();
+
+    // for (let )
+
+    if (JSON.stringify($container) !== JSON.stringify(container)) {
+      setContainer($container);
+    }
+    if (JSON.stringify($context) !== JSON.stringify(context)) {
+      setContext($context);
+    }
+    if (JSON.stringify($listeners) !== JSON.stringify(listeners)) {
+      setListeners($listeners);
+    }
+    if (JSON.stringify($route) !== JSON.stringify(route)) {
+      setRoute($route);
+    }
+    if (JSON.stringify($routes) !== JSON.stringify(routes)) {
+      setRoutes($routes);
+    }
+  }, [
+    monitorName,
+    monitorValue,
+    block,
+    container,
+    context,
+    listeners,
+    route,
+    routes
+  ]);
 
   return (
     <div className="d-flex flex-column">
@@ -229,7 +268,8 @@ export const Ambient = props => {
           context,
           listeners,
           `${secret}@${name}`,
-          defaultValue
+          defaultValue,
+          container
         );
     }
   });
