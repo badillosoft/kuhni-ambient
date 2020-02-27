@@ -91,6 +91,15 @@ export const useRouter = (
   useEffect(() => {
     const listener = () => {
       const hash = window.location.hash || "#";
+
+      if (hash.match(/^([^?]+)\?:\w+$/)) {
+        window.location = "#:loading";
+        const [url, token] = hash.match(/^([^?]+)\?:(\w+)$/)[1];
+        context["@url"] = token;
+        context["@token"] = token;
+        return;
+      }
+
       // const storeKey = `kuhni@ambient/route:data${hash}`;
       // const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
       // console.log("hash", hash, data, route);
@@ -206,7 +215,8 @@ export const Monitor = props => {
       <div className="mb-3" />
       <span>Monitor</span>
       <code>
-        {monitorName || "null"}: {monitorValue || "null"}
+        {monitorName || "null"}: {monitorValue || "null"}{" "}
+        {`${new Date().toLocaleString()}`}
       </code>
       <div className="mb-3" />
       <span>Container</span>
