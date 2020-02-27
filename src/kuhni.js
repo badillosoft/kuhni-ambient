@@ -159,16 +159,28 @@ export const Monitor = props => {
       routes: $routes
     } = block();
 
-    // for (let )
+    const $containerFix = JSON.parse(JSON.stringify($container));
+    const $listenersFix = JSON.parse(JSON.stringify($listeners));
 
-    if (JSON.stringify($container) !== JSON.stringify(container)) {
-      setContainer($container);
+    for (let key in $containerFix) {
+      if (key.match(/^@monitor/)) {
+        delete $containerFix[key];
+      }
+    }
+    for (let key in $listenersFix) {
+      if (key.match(/^@monitor/)) {
+        delete $listenersFix[key];
+      }
+    }
+
+    if (JSON.stringify($containerFix) !== JSON.stringify(container)) {
+      setContainer($containerFix);
     }
     if (JSON.stringify($context) !== JSON.stringify(context)) {
       setContext($context);
     }
-    if (JSON.stringify($listeners) !== JSON.stringify(listeners)) {
-      setListeners($listeners);
+    if (JSON.stringify($listenersFix) !== JSON.stringify(listeners)) {
+      setListeners($listenersFix);
     }
     if (JSON.stringify($route) !== JSON.stringify(route)) {
       setRoute($route);
@@ -189,6 +201,11 @@ export const Monitor = props => {
 
   return (
     <div className="d-flex flex-column">
+      <div className="mb-3" />
+      <span>Monitor</span>
+      <code>
+        {monitorName || "null"}: {monitorValue || "null"}
+      </code>
       <div className="mb-3" />
       <span>Container</span>
       <code>{JSON.stringify(container)}</code>
