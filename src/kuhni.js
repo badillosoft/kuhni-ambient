@@ -45,12 +45,12 @@ export const useContextState = (
       container["@monitor:public"]["@monitor:public@value"] = JSON.stringify(
         newValue
       );
-      container["@monitor:public"][
-        "@monitor:public@container"
-      ] = JSON.stringify(container);
-      container["@monitor:public"]["@monitor:public@context"] = JSON.stringify(
-        context
-      );
+      // container["@monitor:public"][
+      //   "@monitor:public@container"
+      // ] = JSON.stringify(container);
+      // container["@monitor:public"]["@monitor:public@context"] = JSON.stringify(
+      //   context
+      // );
 
       for (let setValue of Object.values(
         listeners["@monitor:public@name"] || []
@@ -67,6 +67,7 @@ export const useContextState = (
 };
 
 export const useRouter = (
+  container = {},
   context,
   listeners,
   key = "route",
@@ -76,7 +77,8 @@ export const useRouter = (
     context,
     listeners,
     key,
-    window.location.hash || defaultUrl
+    window.location.hash || defaultUrl,
+    container
   );
 
   // const [routeData, setRouteData] = useContextState(
@@ -241,8 +243,8 @@ export const Ambient = props => {
   const [context] = useState(defaultContext || {});
   const [listeners] = useState(defaultListeners || {});
 
-  const route = useRouter(context, listeners);
-  // const [route, routeData] = useRouter(context, listeners);
+  const route = useRouter(container, context, listeners);
+  // const [route, routeData] = useRouter(container, context, listeners);
 
   const component = routes[route] || (() => <code>Not found {route}</code>);
 
