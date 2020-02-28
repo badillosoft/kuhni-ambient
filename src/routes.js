@@ -16,6 +16,7 @@ import ComponentB from "./Test/UseContainer/ComponentB";
 import Monitor from "./Test/Monitor/Monitor";
 import ComponentC from "./Test/UseContainer/ComponentC";
 import ComponentD from "./Test/UseContainer/ComponentD";
+import Loading from "./components/Loading/Loading";
 
 export default {
   "#": Home,
@@ -36,5 +37,6 @@ export default {
   "#tutorial-2": Tuto2,
   "#tutorial-3": Tuto3,
   "#tutorial-4": Tuto4,
-  "#tutorial-5": [Tuto5p1, UserForm, Tuto5p2, UserInfo, Tuto5p3]
+  "#tutorial-5": [Tuto5p1, UserForm, Tuto5p2, UserInfo, Tuto5p3],
+  "#:loading": Loading
 };

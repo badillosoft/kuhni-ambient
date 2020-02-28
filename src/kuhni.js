@@ -15,6 +15,7 @@ export const useContextState = (
   defaultValue = null,
   container = {}
 ) => {
+  console.log("context", context);
   container["@monitor:public"] = container["@monitor:public"] || {};
   context[name] = context[name] === undefined ? defaultValue : context[name];
   listeners[name] = listeners[name] || {};
@@ -31,7 +32,7 @@ export const useContextState = (
     };
   }, [id, name, context, listeners]);
   return [
-    value,
+    context[name],
     newValue => {
       // console.log(Object.keys(listeners[name]));
 
@@ -41,10 +42,8 @@ export const useContextState = (
         setValue(JSON.parse(JSON.stringify(newValue)));
       }
 
-      container["@monitor:public"]["@monitor:public@name"] = name;
-      container["@monitor:public"]["@monitor:public@value"] = JSON.stringify(
-        newValue
-      );
+      container["@monitor:public"]["name"] = name;
+      container["@monitor:public"]["value"] = JSON.stringify(newValue);
       // container["@monitor:public"][
       //   "@monitor:public@container"
       // ] = JSON.stringify(container);
@@ -52,14 +51,10 @@ export const useContextState = (
       //   context
       // );
 
-      for (let setValue of Object.values(
-        listeners["@monitor:public@name"] || []
-      )) {
+      for (let setValue of Object.values(listeners["name"] || [])) {
         setValue(name);
       }
-      for (let setValue of Object.values(
-        listeners["@monitor:public@value"] || []
-      )) {
+      for (let setValue of Object.values(listeners["value"] || [])) {
         setValue(JSON.parse(JSON.stringify(newValue)));
       }
     }
@@ -73,6 +68,9 @@ export const useRouter = (
   key = "route",
   defaultUrl = "#"
 ) => {
+  context["@url:origin"] = context["@url:origin"] || defaultUrl;
+  context["@url:target"] = context["@url:target"] || defaultUrl;
+
   const [route, setRoute] = useContextState(
     context,
     listeners,
@@ -93,10 +91,12 @@ export const useRouter = (
       const hash = window.location.hash || "#";
 
       if (hash.match(/^([^?]+)\?:\w+$/)) {
-        window.location = "#:loading";
-        const [url, token] = hash.match(/^([^?]+)\?:(\w+)$/)[1];
-        context["@url"] = token;
+        const [url, token] = hash.match(/^([^?]+)\?:(\w+)$/).slice(1);
+        context["@url"] = url;
+        context["@url:origin"] = route;
+        context["@url:target"] = url;
         context["@token"] = token;
+        window.location = "#:loading";
         return;
       }
 
@@ -116,7 +116,7 @@ export const useRouter = (
     return () => {
       window.removeEventListener("hashchange", listener);
     };
-  }, [route, setRoute]);
+  }, [route, setRoute, context]);
   // }, [route, setRoute, setRouteData]);
 
   return route;
@@ -281,7 +281,7 @@ export const Ambient = props => {
     useRouter: shareRouter,
     useContextState: shareContextState,
     navigate: (route = "#", force = false) => {
-      window.location = `${route}${force ? `:${Number(new Date())}` : ""}`;
+      window.location = `${route}${force ? `+:${Number(new Date())}` : ""}`;
     },
     // navigate: (route = "#", data = {}) => {
     //   const storeKey = `kuhni@ambient/route:data${route}`;
@@ -291,12 +291,13 @@ export const Ambient = props => {
     // navigateData: routeData,
     useContainer: (namespace = "common", token = "public") => {
       const secret = `${namespace}:${token}`;
-      const context = (container[secret] = container[secret] || {});
+      const $context = (container[secret] = container[secret] || {});
       return (name, defaultValue) =>
         shareContextState(
-          context,
+          $context,
           listeners,
-          `${secret}@${name}`,
+          // `${secret}@${name}`,
+          name,
           defaultValue,
           container
         );
