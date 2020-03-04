@@ -6,6 +6,11 @@
 // Github (prod): https://github.com/kuhnidev/kuhni-ambient
 // MIT LICENSE
 
+// Versión 2003.03.1824
+
+// Cambios:
+// * Se agregó BotTester para realizar pruebas unitarias sobre componentes
+
 import React, { useState, useEffect } from "react";
 
 export const useContextState = (
@@ -15,11 +20,10 @@ export const useContextState = (
   defaultValue = null,
   container = {}
 ) => {
-  console.log("context", context);
   container["@monitor:public"] = container["@monitor:public"] || {};
   context[name] = context[name] === undefined ? defaultValue : context[name];
   listeners[name] = listeners[name] || {};
-  const [value, setValue] = useState(context[name]);
+  const [, setValue] = useState(context[name]);
   const [id] = useState(
     Math.random()
       .toString(32)
@@ -242,7 +246,8 @@ export const Ambient = props => {
     routes: defaultRoutes,
     container: defaultContainer,
     context: defaultContext,
-    listeners: defaultListeners
+    listeners: defaultListeners,
+    ui: defaultUI
   } = props;
 
   const shareContextState = useContextState;
@@ -252,6 +257,7 @@ export const Ambient = props => {
   const [container] = useState(defaultContainer || {});
   const [context] = useState(defaultContext || {});
   const [listeners] = useState(defaultListeners || {});
+  const [ui] = useState(defaultUI || {});
 
   const route = useRouter(container, context, listeners);
   // const [route, routeData] = useRouter(container, context, listeners);
@@ -261,6 +267,11 @@ export const Ambient = props => {
   const components = component instanceof Array ? component : [component];
 
   const block = () => ({
+    ui: new Proxy(ui, {
+      get(target, name) {
+        return target[name] || (() => <code>invalid ui {name}</code>);
+      }
+    }),
     route,
     routes: JSON.parse(JSON.stringify(Object.keys(routes))),
     container: JSON.parse(JSON.stringify(container)),
@@ -301,6 +312,9 @@ export const Ambient = props => {
           defaultValue,
           container
         );
+    },
+    bots: {
+      BotTester
     }
   });
 
@@ -316,5 +330,104 @@ export const Ambient = props => {
         />
       ))}
     </>
+  );
+};
+
+export const BotTester = props => {
+  const { control: Control, title, description, inputs, outputs } = props;
+
+  const [update, setUpdate] = useState(new Date());
+  const [state, setState] = useState({});
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!initialized) {
+      const computeState = () => {
+        state.inputKeys = {};
+        state.outputKeys = {};
+        state.inputs = Object.entries(inputs || {})
+          .map(([key, value]) => {
+            if (!/^@set/.test(value)) {
+              state.inputKeys[key] = false;
+              return [key, value];
+            }
+            const [, setterName, json] = value.match(/^@([^(]+)\(?(.*)/);
+
+            if (initialized && outputs[setterName]) {
+              console.warn(
+                `BotTester: Conflicto ${key}/@${setterName} <> ${setterName}`
+              );
+              console.warn(
+                `Reemplaza @${setterName} por @${setterName}Temporal`
+              );
+              return [key, null];
+            }
+            outputs[setterName] = newValue => {
+              state.inputs[key] = newValue;
+            };
+            state.outputKeys[setterName] = true;
+            state.inputKeys[key] = true;
+            return [key, JSON.parse(json.slice(0, -1))];
+          })
+          .reduce((object, [key, value]) => {
+            object[key] = value;
+            return object;
+          }, {});
+      };
+      computeState();
+      state.outputs = Object.entries(outputs || {})
+        .map(([key, setter]) => {
+          state.outputKeys[key] = state.outputKeys[key] || false;
+          return [
+            key,
+            newValue => {
+              computeState();
+              setter(newValue, { ...state.inputs, ...state.outputs });
+              setUpdate(new Date());
+            }
+          ];
+        })
+        .reduce((object, [key, value]) => {
+          object[key] = value;
+          return object;
+        }, {});
+      setState(state);
+      setInitialized(true);
+    }
+  }, [initialized, outputs, state, inputs]);
+
+  return (
+    <div className="d-flex flex-column mb-5 p-5 border">
+      <span>
+        <strong>{title}</strong>
+      </span>
+      <span>{description}</span>
+      <div className="d-flex flex-column m-2">
+        <span className="text-secondary">input:</span>
+        <code>
+          {Object.entries(state.inputKeys || {})
+            .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
+            .map(([key, special]) => (special ? `*${key}` : key))
+            .join(" ")}
+        </code>
+      </div>
+      <div className="d-flex flex-column m-2">
+        <span className="text-secondary">output:</span>
+        <code>
+          {Object.entries(state.outputKeys || {})
+            .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
+            .map(([key, special]) => (special ? `*${key}` : key))
+            .join(" ")}
+        </code>
+      </div>
+      <div className="d-flex flex-column m-2">
+        <span className="text-secondary">state:</span>
+        <code>{JSON.stringify(state.inputs)}</code>
+      </div>
+      <Control {...state.inputs || {}} {...state.outputs || {}} />
+      <span className="text-secondary">
+        <small>{update.toISOString()}</small>
+      </span>
+    </div>
   );
 };
