@@ -342,9 +342,9 @@ export const BotTester = props => {
 
   useEffect(() => {
     if (!initialized) {
+      state.inputKeys = {};
+      state.outputKeys = {};
       const computeState = () => {
-        state.inputKeys = {};
-        state.outputKeys = {};
         state.inputs = Object.entries(inputs || {})
           .map(([key, value]) => {
             if (!/^@set/.test(value)) {
@@ -364,6 +364,7 @@ export const BotTester = props => {
             }
             outputs[setterName] = newValue => {
               state.inputs[key] = newValue;
+              setUpdate(new Date());
             };
             state.outputKeys[setterName] = true;
             state.inputKeys[key] = true;
@@ -373,26 +374,26 @@ export const BotTester = props => {
             object[key] = value;
             return object;
           }, {});
-        state.outputs = Object.entries(outputs || {})
-          .map(([key, setter]) => {
-            state.outputKeys[key] = state.outputKeys[key] || false;
-            return [
-              key,
-              newValue => {
-                computeState();
-                setter(newValue, { ...state.inputs, ...state.outputs });
-                setUpdate(new Date());
-              }
-            ];
-          })
-          .reduce((object, [key, value]) => {
-            object[key] = value;
-            return object;
-          }, {});
         setState(state);
         setInitialized(true);
       };
       computeState();
+      state.outputs = Object.entries(outputs || {})
+        .map(([key, setter]) => {
+          state.outputKeys[key] = state.outputKeys[key] || false;
+          return [
+            key,
+            newValue => {
+              // computeState();
+              setter(newValue, { ...state.inputs, ...state.outputs });
+              // setUpdate(new Date());
+            }
+          ];
+        })
+        .reduce((object, [key, value]) => {
+          object[key] = value;
+          return object;
+        }, {});
     }
   }, [initialized, outputs, state, inputs]);
 
