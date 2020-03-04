@@ -399,11 +399,11 @@ export const BotTester = props => {
   return (
     <div className="d-flex flex-column mb-5 p-5 border">
       <span>
-        <strong>{title}</strong>
+        <strong>{title || "Prueba unitaria"}</strong>
       </span>
-      <span>{description}</span>
+      <span>{description || "Sin descripción"}</span>
       <div className="d-flex flex-column m-2">
-        <span className="text-secondary">input:</span>
+        <span className="text-secondary">Input:</span>
         <code>
           {Object.entries(state.inputKeys || {})
             .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
@@ -412,7 +412,7 @@ export const BotTester = props => {
         </code>
       </div>
       <div className="d-flex flex-column m-2">
-        <span className="text-secondary">output:</span>
+        <span className="text-secondary">Output:</span>
         <code>
           {Object.entries(state.outputKeys || {})
             .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
@@ -421,7 +421,7 @@ export const BotTester = props => {
         </code>
       </div>
       <div className="d-flex flex-column m-2">
-        <span className="text-secondary">state:</span>
+        <span className="text-secondary">State:</span>
         <code>{JSON.stringify(state.inputs)}</code>
       </div>
       <Control {...state.inputs || {}} {...state.outputs || {}} />
