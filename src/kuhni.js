@@ -6,10 +6,10 @@
 // Github (prod): https://github.com/kuhnidev/kuhni-ambient
 // MIT LICENSE
 
-// Versión 2003.03.1824
+// VersiÃ³n 2003.03.1824
 
 // Cambios:
-// * Se agregó BotTester para realizar pruebas unitarias sobre componentes
+// * Se agregÃ³ BotTester para realizar pruebas unitarias sobre componentes
 
 import React, { useState, useEffect } from "react";
 
@@ -373,26 +373,26 @@ export const BotTester = props => {
             object[key] = value;
             return object;
           }, {});
+        state.outputs = Object.entries(outputs || {})
+          .map(([key, setter]) => {
+            state.outputKeys[key] = state.outputKeys[key] || false;
+            return [
+              key,
+              newValue => {
+                computeState();
+                setter(newValue, { ...state.inputs, ...state.outputs });
+                setUpdate(new Date());
+              }
+            ];
+          })
+          .reduce((object, [key, value]) => {
+            object[key] = value;
+            return object;
+          }, {});
+        setState(state);
+        setInitialized(true);
       };
       computeState();
-      state.outputs = Object.entries(outputs || {})
-        .map(([key, setter]) => {
-          state.outputKeys[key] = state.outputKeys[key] || false;
-          return [
-            key,
-            newValue => {
-              computeState();
-              setter(newValue, { ...state.inputs, ...state.outputs });
-              setUpdate(new Date());
-            }
-          ];
-        })
-        .reduce((object, [key, value]) => {
-          object[key] = value;
-          return object;
-        }, {});
-      setState(state);
-      setInitialized(true);
     }
   }, [initialized, outputs, state, inputs]);
 
