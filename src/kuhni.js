@@ -6,10 +6,10 @@
 // Github (prod): https://github.com/kuhnidev/kuhni-ambient
 // MIT LICENSE
 
-// VersiÃ³n 2003.03.1824
+// Version: 2003.03.2049
 
 // Cambios:
-// * Se agregÃ³ BotTester para realizar pruebas unitarias sobre componentes
+// * Fix BotTester for add more functionallity
 
 import React, { useState, useEffect } from "react";
 
@@ -368,7 +368,7 @@ export const BotTester = props => {
             };
             state.outputKeys[setterName] = true;
             state.inputKeys[key] = true;
-            return [key, JSON.parse(json.slice(0, -1))];
+            return [key, JSON.parse(json.slice(0, -1) || "null")];
           })
           .reduce((object, [key, value]) => {
             object[key] = value;
