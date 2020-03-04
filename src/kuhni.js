@@ -6,12 +6,12 @@
 // Github (prod): https://github.com/kuhnidev/kuhni-ambient
 // MIT LICENSE
 
-// Version: 2003.03.2049
+import React, { useState, useEffect } from "react";
+
+const version = "v2003.03.2116";
 
 // Cambios:
-// * Fix BotTester for add more functionallity
-
-import React, { useState, useEffect } from "react";
+// * Add version description on BotTester and fix update info
 
 export const useContextState = (
   context,
@@ -410,6 +410,10 @@ export const BotTester = props => {
           `Replace this description (<BotTester description="..." />)`}
       </span>
       <div className="d-flex flex-column m-2">
+        <span className="text-secondary">Version:</span>
+        <code>{version}</code>
+      </div>
+      <div className="d-flex flex-column m-2">
         <span className="text-secondary">Input:</span>
         <code>
           {Object.entries(state.inputKeys || {})
@@ -431,10 +435,13 @@ export const BotTester = props => {
         <span className="text-secondary">State:</span>
         <code>{JSON.stringify(state.inputs)}</code>
       </div>
+      <div className="d-flex flex-column m-2">
+        <span className="text-secondary">Update:</span>
+        <span className="text-secondary">
+          <small>{update.toISOString()}</small>
+        </span>
+      </div>
       <Control {...state.inputs || {}} {...state.outputs || {}} />
-      <span className="text-secondary">
-        <small>{update.toISOString()}</small>
-      </span>
     </div>
   );
 };
