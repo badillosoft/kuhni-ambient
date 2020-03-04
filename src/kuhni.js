@@ -8,10 +8,9 @@
 
 import React, { useState, useEffect } from "react";
 
-const version = "v2003.03.2116";
+const version = "v2003.03.2131";
 
-// Cambios:
-// * Add version description on BotTester and fix update info
+// Change: Redisign from BotTester and add version variable
 
 export const useContextState = (
   context,
@@ -398,7 +397,7 @@ export const BotTester = props => {
   }, [initialized, outputs, state, inputs]);
 
   return (
-    <div className="d-flex flex-column mb-5 p-5 border">
+    <div className="d-flex flex-column mb-5 p-3 border">
       <span>
         <strong>
           {title ||
@@ -409,39 +408,47 @@ export const BotTester = props => {
         {description ||
           `Replace this description (<BotTester description="..." />)`}
       </span>
-      <div className="d-flex flex-column m-2">
-        <span className="text-secondary">Version:</span>
-        <code>{version}</code>
-      </div>
-      <div className="d-flex flex-column m-2">
-        <span className="text-secondary">Input:</span>
-        <code>
-          {Object.entries(state.inputKeys || {})
-            .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
-            .map(([key, special]) => (special ? `*${key}` : key))
-            .join(" ") || `Not inputs`}
-        </code>
-      </div>
-      <div className="d-flex flex-column m-2">
-        <span className="text-secondary">Output:</span>
-        <code>
-          {Object.entries(state.outputKeys || {})
-            .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
-            .map(([key, special]) => (special ? `*${key}` : key))
-            .join(" ") || `Not outputs`}
-        </code>
+      <div className="d-flex">
+        <div className="d-flex flex-column m-2">
+          <span className="text-secondary">Inputs:</span>
+          <code>
+            {Object.entries(state.inputKeys || {})
+              .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
+              .map(([key, special]) => (special ? `*${key}` : key))
+              .join(" ") || `Not inputs`}
+          </code>
+        </div>
+        <div className="d-flex flex-column m-2 border-left pl-3">
+          <span className="text-secondary">Outputs:</span>
+          <code>
+            {Object.entries(state.outputKeys || {})
+              .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
+              .map(([key, special]) => (special ? `*${key}` : key))
+              .join(" ") || `Not outputs`}
+          </code>
+        </div>
       </div>
       <div className="d-flex flex-column m-2">
         <span className="text-secondary">State:</span>
         <code>{JSON.stringify(state.inputs)}</code>
       </div>
       <div className="d-flex flex-column m-2">
-        <span className="text-secondary">Update:</span>
+        <span className="text-secondary mr-2">Update:</span>
+        <code>{update.toISOString()}</code>
+      </div>
+      <div
+        className="py-4 px-5 border"
+        style={{ backgroundColor: "whitesmoke" }}
+      >
+        <Control {...state.inputs || {}} {...state.outputs || {}} />
+      </div>
+      <div className="mt-2 text-right">
         <span className="text-secondary">
-          <small>{update.toISOString()}</small>
+          <small>
+            <strong>kuhni.js</strong> - BotTester <code>{version}</code>
+          </small>
         </span>
       </div>
-      <Control {...state.inputs || {}} {...state.outputs || {}} />
     </div>
   );
 };
