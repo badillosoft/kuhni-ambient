@@ -399,16 +399,22 @@ export const BotTester = props => {
   return (
     <div className="d-flex flex-column mb-5 p-5 border">
       <span>
-        <strong>{title || "Prueba unitaria"}</strong>
+        <strong>
+          {title ||
+            `Bot Tester - Replace this title (<BotTester title="..." />)`}
+        </strong>
       </span>
-      <span>{description || "Sin descripción"}</span>
+      <span>
+        {description ||
+          `Replace this description (<BotTester description="..." />)`}
+      </span>
       <div className="d-flex flex-column m-2">
         <span className="text-secondary">Input:</span>
         <code>
           {Object.entries(state.inputKeys || {})
             .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
             .map(([key, special]) => (special ? `*${key}` : key))
-            .join(" ")}
+            .join(" ") || `Not inputs`}
         </code>
       </div>
       <div className="d-flex flex-column m-2">
@@ -417,7 +423,7 @@ export const BotTester = props => {
           {Object.entries(state.outputKeys || {})
             .sort(([, sA], [, sB]) => Number(!sB) - Number(!sA))
             .map(([key, special]) => (special ? `*${key}` : key))
-            .join(" ")}
+            .join(" ") || `Not outputs`}
         </code>
       </div>
       <div className="d-flex flex-column m-2">
