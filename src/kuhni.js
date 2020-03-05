@@ -8,9 +8,9 @@
 
 import React, { useState, useEffect } from "react";
 
-const version = "v2003.04.1855";
+const version = "v2003.05.0006";
 
-// Change: Create BotContainer and fix BotTester
+// Change: Stop setContext log on BotAmbient
 
 export const useContextState = (
   context,
