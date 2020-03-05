@@ -8,9 +8,9 @@
 
 import React, { useState, useEffect } from "react";
 
-const version = "v2003.03.2131";
+const version = "v2003.04.1855";
 
-// Change: Redisign from BotTester and add version variable
+// Change: Create BotContainer and fix BotTester
 
 export const useContextState = (
   context,
@@ -38,6 +38,56 @@ export const useContextState = (
     context[name],
     newValue => {
       // console.log(Object.keys(listeners[name]));
+
+      context[name] = newValue;
+
+      for (let setValue of Object.values(listeners[name] || [])) {
+        setValue(JSON.parse(JSON.stringify(newValue)));
+      }
+
+      container["@monitor:public"]["name"] = name;
+      container["@monitor:public"]["value"] = JSON.stringify(newValue);
+      // container["@monitor:public"][
+      //   "@monitor:public@container"
+      // ] = JSON.stringify(container);
+      // container["@monitor:public"]["@monitor:public@context"] = JSON.stringify(
+      //   context
+      // );
+
+      for (let setValue of Object.values(listeners["name"] || [])) {
+        setValue(name);
+      }
+      for (let setValue of Object.values(listeners["value"] || [])) {
+        setValue(JSON.parse(JSON.stringify(newValue)));
+      }
+    }
+  ];
+};
+
+export const shareContextState = (
+  context,
+  listeners,
+  name = "default",
+  defaultValue = null,
+  container = {}
+) => {
+  container["@monitor:public"] = container["@monitor:public"] || {};
+  context[name] = context[name] === undefined ? defaultValue : context[name];
+  listeners[name] = listeners[name] || {};
+  // const [, setValue] = context[name] || [
+  //   null,
+  //   () => {
+  //     console.warn(`ShareContext:`, name);
+  //   }
+  // ];
+  // const id = Math.random()
+  //   .toString(32)
+  //   .slice(2);
+  // listeners[name][id] = setValue;
+  return [
+    context[name],
+    newValue => {
+      console.log("ACTUALIZANDO SCS", Object.keys(listeners[name]));
 
       context[name] = newValue;
 
@@ -333,68 +383,117 @@ export const Ambient = props => {
 };
 
 export const BotTester = props => {
-  const { control: Control, title, description, inputs, outputs } = props;
+  const {
+    controlId,
+    control,
+    title,
+    description,
+    showControlOnly,
+    inputs: defaultInputs,
+    outputs: defaultOutputs,
+    setContext
+  } = props;
+
+  const Control = control || (() => <code>Control is not defined</code>);
 
   const [update, setUpdate] = useState(new Date());
-  const [state, setState] = useState({});
+  const [state, setState] = useState({
+    inputKeys: {},
+    outputKeys: {},
+    inputs: {},
+    outputs: {}
+  });
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!initialized) {
-      state.inputKeys = {};
-      state.outputKeys = {};
-      const computeState = () => {
-        state.inputs = Object.entries(inputs || {})
-          .map(([key, value]) => {
-            if (!/^@set/.test(value)) {
-              state.inputKeys[key] = false;
-              return [key, value];
-            }
-            const [, setterName, json] = value.match(/^@([^(]+)\(?(.*)/);
-
-            if (initialized && outputs[setterName]) {
-              console.warn(
-                `BotTester: Conflicto ${key}/@${setterName} <> ${setterName}`
-              );
-              console.warn(
-                `Reemplaza @${setterName} por @${setterName}Temporal`
-              );
-              return [key, null];
-            }
-            outputs[setterName] = newValue => {
-              state.inputs[key] = newValue;
-              setUpdate(new Date());
-            };
-            state.outputKeys[setterName] = true;
-            state.inputKeys[key] = true;
-            return [key, JSON.parse(json.slice(0, -1) || "null")];
-          })
-          .reduce((object, [key, value]) => {
-            object[key] = value;
-            return object;
-          }, {});
-        setState(state);
-        setInitialized(true);
-      };
-      computeState();
-      state.outputs = Object.entries(outputs || {})
-        .map(([key, setter]) => {
-          state.outputKeys[key] = state.outputKeys[key] || false;
-          return [
-            key,
-            newValue => {
-              // computeState();
-              setter(newValue, { ...state.inputs, ...state.outputs });
-              // setUpdate(new Date());
-            }
-          ];
-        })
-        .reduce((object, [key, value]) => {
-          object[key] = value;
-          return object;
-        }, {});
+    if (setContext) {
+      setContext(state.inputs);
     }
-  }, [initialized, outputs, state, inputs]);
+  }, [state, setContext]);
+
+  const [inputs, setInputs] = useState({});
+  useEffect(() => {
+    // console.log("di", defaultInputs);
+    if (defaultInputs === undefined || defaultInputs === null) return;
+    setInputs(defaultInputs);
+  }, [defaultInputs]);
+
+  const [outputs, setOutputs] = useState({});
+  useEffect(() => {
+    // console.log("do", defaultOutputs);
+    if (defaultOutputs === undefined || defaultOutputs === null) return;
+    setOutputs(defaultOutputs);
+  }, [defaultOutputs]);
+
+  const computeState = () => {
+    state.inputs = Object.entries(inputs || {})
+      .map(([key, value]) => {
+        if (!/^@set/.test(value)) {
+          state.inputKeys[key] = false;
+          return [key, value];
+        }
+        const [, setterName, json] = value.match(/^@([^(]+)\(?(.*)/);
+
+        // if (initialized && outputs[setterName]) {
+        //   console.warn(
+        //     `BotTester: Conflicto ${key}/@${setterName} <> ${setterName}`
+        //   );
+        //   console.warn(`Reemplaza @${setterName} por @${setterName}Temporal`);
+        //   return [key, null];
+        // }
+        outputs[setterName] = newValue => {
+          state.inputs[key] = newValue;
+          // setState({ ...state });
+          setUpdate(new Date());
+        };
+        // state.outputs = outputs;
+        state.outputKeys[setterName] = true;
+        state.inputKeys[key] = true;
+        return [key, JSON.parse(json.slice(0, -1) || "null")];
+      })
+      .reduce((object, [key, value]) => {
+        object[key] = value;
+        return object;
+      }, {});
+    // console.log("COMPUTE", JSON.stringify(state));
+    setState({ ...state });
+    setInitialized(true);
+    // setOutputs({ ...outputs });
+  };
+
+  useEffect(() => {
+    // console.log("CHANGE INPUTS", controlId, inputs);
+    computeState();
+  }, [controlId, inputs]);
+
+  useEffect(() => {
+    // console.log("CHANGE OUTPUTS", controlId, outputs);
+    state.outputs = Object.entries(outputs || {})
+      .map(([key, setter]) => {
+        state.outputKeys[key] = state.outputKeys[key] || false;
+        return [
+          key,
+          newValue => {
+            // computeState();
+            setter(newValue, { ...state.inputs, ...state.outputs });
+            // setUpdate(new Date());
+          }
+        ];
+      })
+      .reduce((object, [key, value]) => {
+        object[key] = value;
+        return object;
+      }, {});
+    setState({ ...state });
+  }, [controlId, outputs]);
+
+  // useEffect(() => {
+  //   console.log("STATE", controlId, state);
+  // }, [state, controlId]);
+
+  if (showControlOnly) {
+    return <Control {...state.inputs || {}} {...state.outputs || {}} />;
+  }
 
   return (
     <div className="d-flex flex-column mb-5 p-3 border">
@@ -451,4 +550,203 @@ export const BotTester = props => {
       </div>
     </div>
   );
+};
+
+export const BotValidator = props => {
+  return null;
+};
+
+export const BotContainer = props => {
+  const {
+    debug,
+    control,
+    inputs: defaultInputs,
+    outputs: defaultOutputs,
+    states: defaultStates,
+    listeners: defaultListeners
+  } = props;
+
+  const [listeners, setListeners] = useState({});
+  useEffect(() => {
+    setListeners(defaultListeners);
+  }, [defaultListeners]);
+
+  const [states, setStates] = useState({});
+  useEffect(() => {
+    setStates(defaultStates);
+  }, [defaultStates]);
+
+  const [inputs, setInputs] = useState({});
+  useEffect(() => {
+    if (defaultInputs === undefined || defaultInputs === null) return;
+    setInputs(defaultInputs);
+  }, [defaultInputs]);
+
+  const [outputs, setOutputs] = useState({});
+  useEffect(() => {
+    if (defaultOutputs === undefined || defaultOutputs === null) return;
+    setOutputs(defaultOutputs);
+  }, [defaultOutputs]);
+
+  const [computedInputs, setComputedInputs] = useState({});
+  const [computedOutputs, setComputedOuputs] = useState({});
+
+  const [currentId] = useState(
+    Math.random()
+      .toString(32)
+      .slice(2)
+  );
+
+  useEffect(() => {
+    const computedInputs = {};
+    for (let [key, value] of Object.entries(inputs)) {
+      const [contextName, keyName] = value.split(".");
+      const [LocalContext] = states[contextName];
+      computedInputs[key] = LocalContext[keyName];
+    }
+    setComputedInputs(computedInputs);
+    console.log("IN", currentId, computedInputs);
+  }, [inputs, states, currentId]);
+
+  useEffect(() => {
+    const computedOutputs = {};
+    for (let [key, value] of Object.entries(outputs)) {
+      const [contextName, expr] = value.split(".");
+      const [, keyName, args] = expr.match(/^([^(]+)\(?(.*)/);
+      computedOutputs[key] = newValue => {
+        const data = args.slice(0, -1);
+        const keyPre = keyName.replace("set", "");
+        const keyPost = `${keyPre[0].toLowerCase()}${keyPre.slice(1)}`;
+        // console.log("STATE A", JSON.stringify(states));
+        const [LocalContext, setLocalContext] = states[contextName];
+
+        let resultValue = newValue;
+
+        if (data !== "value") {
+          resultValue = JSON.parse(data);
+        }
+
+        LocalContext[keyPost] = resultValue;
+
+        states[contextName] = [LocalContext, setLocalContext];
+        setLocalContext({ ...LocalContext });
+        // console.log("STATE B", JSON.stringify(states));
+        // setStates({ ...states });
+        // console.warn(contextName, keyPost, data, newValue);
+      };
+    }
+    setComputedOuputs(computedOutputs);
+    console.log("OUT", currentId, computedOutputs);
+  }, [outputs, currentId]);
+
+  return (
+    <BotTester
+      controlId={currentId}
+      control={control}
+      showControlOnly={!debug}
+      inputs={computedInputs}
+      outputs={computedOutputs}
+      setContext={context => {
+        console.log("context", context);
+      }}
+    />
+  );
+};
+
+const BotContainerAppContainer = {};
+const BotContainerAppListeners = {};
+
+export const BotContainerDep = props => {
+  const {
+    control,
+    inputs: defaultInputs,
+    outputs: defaultOutputs,
+    container: defaultContainer,
+    listeners: defaultListeners
+  } = props;
+
+  const container = defaultContainer || BotContainerAppContainer;
+  const listeners = defaultListeners || BotContainerAppListeners;
+
+  const inputs = defaultInputs || {};
+  const outputs = defaultOutputs || {};
+
+  const Control = control || (() => <code>Control is not defined</code>);
+
+  const [initialized, setInitialized] = useState(false);
+  const [currentInputs, setCurrentInputs] = useState({});
+  const [currentOutputs, setCurrentOutputs] = useState({});
+  const [currentId] = useState(
+    Math.random()
+      .toString(32)
+      .slice(2)
+  );
+
+  useEffect(() => {
+    if (!initialized) {
+      const containers = {};
+
+      for (let [key, value] of [
+        ...Object.entries(inputs),
+        ...Object.entries(outputs)
+      ].filter(([, value]) => /#[^>]+>.+/.test(value))) {
+        const [, containerChain, keyName] = value.match(/#([^>]+)>(.+)/);
+        const [containerName, containerNamespace] = containerChain
+          .replace(/-+$/, "")
+          .split("!");
+        // console.log(containerChain, containerName, containerNamespace, keyName);
+        containers[containerName] = containers[containerName] || {};
+        containers[containerName][containerNamespace] =
+          containers[containerName][containerNamespace] || {};
+        if (containers[containerName][containerNamespace][keyName]) continue;
+        const secret = `${containerName}:${containerNamespace}`;
+        const $context = (container[secret] = container[secret] || {});
+        listeners[`${secret}:${keyName}`] =
+          listeners[`${secret}:${keyName}`] || {};
+        const [getter, setter] = [
+          $context[keyName] || null,
+          (newValue, death = false) => {
+            // console.log("ACTUALIZANDO", key, keyName, newValue);
+            $context[keyName] = newValue;
+            inputs[key] = newValue;
+            setCurrentInputs({
+              ...inputs
+            });
+
+            if (death) {
+              return;
+            }
+
+            // Notifica
+            // console.log(listeners[`${secret}:${keyName}`]);
+            for (let $setter of Object.values(
+              listeners[`${secret}:${keyName}`] || {}
+            )) {
+              $setter(newValue, true);
+            }
+          }
+        ];
+        listeners[`${secret}:${keyName}`][currentId] = setter;
+        containers[containerName][containerNamespace][keyName] = [key, value];
+        inputs[key] = getter;
+
+        outputs[`set${key[0].toUpperCase()}${key.slice(1)}`] = setter;
+      }
+
+      // console.log(containers);
+      // console.log(inputs, outputs);
+
+      setCurrentInputs(inputs);
+      setCurrentOutputs(outputs);
+
+      setInitialized(true);
+    }
+  }, [currentId, inputs, outputs, container, initialized, listeners]);
+
+  useEffect(() => {
+    // console.log("inputs", currentInputs);
+    // console.log("outputs", currentOutputs);
+  }, [currentInputs, currentOutputs]);
+
+  return <Control {...currentInputs} {...currentOutputs} />;
 };
